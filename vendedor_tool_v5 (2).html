@@ -1,0 +1,1012 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mi Ruta · RR Patagonia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+:root {
+  --bg:#0f0f0f;--surface:#1a1a1a;--surface2:#242424;--border:#2e2e2e;
+  --text:#f0f0f0;--muted:#888;
+  --sal:#4ade80;--cam:#facc15;--cbs:#c084fc;--ush:#38bdf8;
+  --red:#f87171;--orange:#fb923c;--green:#4ade80;
+  --mono:'DM Mono',monospace;--sans:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100dvh;overflow-x:hidden}
+
+/* LOAD */
+#loadScreen{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:0}
+.logo-area{text-align:center;margin-bottom:40px}
+.logo-title{font-size:28px;font-weight:800;letter-spacing:-0.5px}
+.logo-sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.accent-bar{width:40px;height:3px;background:linear-gradient(90deg,var(--sal),var(--cam),var(--cbs));margin:12px auto 0;border-radius:2px}
+.upload-card{width:100%;max-width:400px;background:var(--surface);border:1.5px dashed var(--border);border-radius:16px;padding:28px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upload-card:hover,.upload-card.dragover{border-color:var(--sal);background:#1f2a1f}
+.upload-icon{font-size:32px;margin-bottom:10px;display:block}
+.upload-label{font-size:15px;font-weight:700;display:block}
+.upload-hint{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px;display:block}
+#fileInput{display:none}
+.progress-wrap{width:100%;max-width:400px;margin-top:16px;display:none}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--sal),var(--cam));border-radius:2px;width:0%;transition:width .3s}
+.progress-text{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
+.vendor-section{width:100%;max-width:400px;margin-top:24px;display:none}
+.vendor-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block}
+.vendor-select{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:15px;font-weight:600;padding:14px 16px;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.vendor-select:focus{outline:none;border-color:var(--sal)}
+.enter-btn{width:100%;margin-top:12px;background:var(--sal);color:#0a1a0a;border:none;border-radius:10px;font-family:var(--sans);font-size:15px;font-weight:800;padding:16px;cursor:pointer;transition:opacity .2s,transform .1s}
+.enter-btn:active{transform:scale(.98)}
+.enter-btn:disabled{opacity:.4;cursor:not-allowed}
+.base-info{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;margin-top:16px;max-width:400px}
+
+/* APP */
+#app{display:none;min-height:100dvh;flex-direction:column}
+.app-header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-name{font-size:14px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-date{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.search-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:16px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:61px;z-index:99;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:80px;padding:12px 8px 10px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;letter-spacing:0.3px;user-select:none}
+.tab.active{color:var(--text)}
+.tab[data-marca="sal"].active{border-color:var(--sal);color:var(--sal)}
+.tab[data-marca="cam"].active{border-color:var(--cam);color:var(--cam)}
+.tab[data-marca="cbs"].active{border-color:var(--cbs);color:var(--cbs)}
+.tab[data-marca="gen"].active{border-color:var(--text);color:var(--text)}
+/* PROVIDER RANKING */
+.prov-list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px 14px;margin-bottom:10px}
+.prov-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.prov-row:last-child{border-bottom:none}
+.prov-rank{font-family:var(--mono);font-size:10px;color:var(--muted);width:16px;flex-shrink:0;text-align:right}
+.prov-name{font-size:11px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prov-bar-wrap{width:70px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.prov-bar{height:100%;border-radius:3px;transition:width .4s}
+.prov-cant{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;min-width:48px;text-align:right}
+/* BRAND SUMMARY */
+.brand-summary{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.brand-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.brand-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.brand-label{font-size:12px;font-weight:700;flex:1}
+.brand-bar-wrap{flex:2;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.brand-bar{height:100%;border-radius:3px}
+.brand-pct{font-family:var(--mono);font-size:11px;color:var(--muted);width:36px;text-align:right;flex-shrink:0}
+.brand-cj{font-family:var(--mono);font-size:11px;font-weight:500;width:60px;text-align:right;flex-shrink:0}
+.content{padding:16px;padding-bottom:80px;flex:1}
+
+/* CARDS */
+.section-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
+.section-title:first-child{margin-top:0}
+.ritmo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat-card{background:var(--surface);border-radius:12px;padding:14px 14px 12px;border:1px solid var(--border)}
+.stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:800;line-height:1;letter-spacing:-1px}
+.stat-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px}
+.stat-delta{font-family:var(--mono);font-size:11px;font-weight:500;margin-top:4px}
+.delta-up{color:var(--green)}.delta-down{color:var(--red)}
+.proy-card{background:var(--surface);border-radius:12px;padding:14px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.proy-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.proy-value{font-size:20px;font-weight:800;margin-top:2px;letter-spacing:-0.5px}
+.proy-badge{font-family:var(--mono);font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.badge-ok{background:#1a2e1a;color:var(--green)}.badge-warn{background:#2e2010;color:var(--orange)}.badge-bad{background:#2e1010;color:var(--red)}
+.prog-wrap{background:var(--surface);border-radius:12px;padding:14px;border:1px solid var(--border);margin-bottom:10px}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.prog-pct{font-family:var(--mono);font-size:13px;font-weight:500}
+.prog-track{height:6px;background:var(--border);border-radius:4px;overflow:hidden}
+.prog-bar{height:100%;border-radius:4px;transition:width .4s ease}
+.cob-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.cob-card{background:var(--surface);border-radius:12px;padding:12px 10px;text-align:center;border:1px solid var(--border)}
+.cob-num{font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1}
+.cob-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* CLIENT ROWS */
+.client-list{display:flex;flex-direction:column;gap:8px}
+.client-row{background:var(--surface);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.client-row-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer}
+.client-row-header:active{background:var(--surface2)}
+.semaforo{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sem-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.sem-orange{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.sem-red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.client-info{flex:1;min-width:0}
+.client-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
+.client-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.client-right{text-align:right;flex-shrink:0}
+.client-units{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:-0.3px}
+.client-skus{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.chevron{font-size:10px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+.chevron.open{transform:rotate(180deg)}
+
+/* DRAWER */
+.client-drawer{display:none;border-top:1px solid var(--border);padding:12px 14px;background:var(--surface2)}
+.client-drawer.open{display:block}
+.drawer-section{margin-bottom:12px}
+.drawer-title{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sku-rows{display:flex;flex-direction:column;gap:4px}
+.sku-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;background:var(--bg)}
+.sku-row-name{font-size:11px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sku-row-cant{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.infalt-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.infalt-chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;font-weight:500}
+.chip-ok{background:#1a2e1a;color:var(--green)}.chip-miss{background:#2a1a1a;color:var(--red)}
+.accion-tag{font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:4px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
+.tag-dorm{background:#2e1010;color:var(--red)}.tag-mix{background:#2e2010;color:var(--orange)}.tag-ok{background:#1a2e1a;color:var(--green)}
+.show-more{text-align:center;padding:12px;font-family:var(--mono);font-size:11px;color:var(--muted);cursor:pointer;border:1px dashed var(--border);border-radius:10px;margin-top:4px;transition:color .2s,border-color .2s}
+.show-more:hover{color:var(--text);border-color:var(--text)}
+.empty{text-align:center;padding:32px 24px;color:var(--muted)}
+.empty-text{font-size:14px;font-weight:600}
+.empty-sub{font-family:var(--mono);font-size:11px;margin-top:6px}
+.ontrade-badge{display:inline-block;background:#1a1a2e;color:var(--ush);font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+
+/* SEARCH */
+#searchOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column}
+.search-header{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border)}
+.search-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:15px;font-weight:600;padding:12px 14px;outline:none}
+.search-input:focus{border-color:var(--text)}
+.search-input::placeholder{color:var(--muted);font-weight:400}
+.search-close{background:none;border:none;color:var(--muted);font-size:14px;font-family:var(--mono);cursor:pointer;padding:8px;white-space:nowrap}
+.search-results{flex:1;overflow-y:auto;padding:16px}
+.search-client-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.search-client-header{padding:14px;cursor:pointer}
+.search-client-name{font-size:15px;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px}
+.marca-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.marca-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:8px;padding:6px 10px}
+.pill-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pill-label{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.pill-val{font-family:var(--mono);font-size:11px;font-weight:500}
+.search-drawer{display:none;border-top:1px solid var(--border);padding:12px 14px;background:var(--surface2)}
+.search-drawer.open{display:block}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-family:var(--mono);font-size:12px;color:var(--text);transition:transform .3s ease;z-index:300;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="loadScreen">
+  <div class="logo-area">
+    <div class="logo-title">Mi Ruta</div>
+    <div class="logo-sub">RR Patagonia · Ventas</div>
+    <div class="accent-bar"></div>
+  </div>
+  <div class="progress-wrap" id="progressWrap" style="display:block">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">Conectando...</div>
+  </div>
+  <div class="upload-card" id="uploadCard" style="display:none" onclick="document.getElementById('fileInput').click()">
+    <span class="upload-icon">📂</span>
+    <span class="upload-label">Cargar CSV manualmente</span>
+    <span class="upload-hint">Usá esto si no tenés conexión</span>
+    <input type="file" id="fileInput" accept=".csv">
+  </div>
+  <div class="vendor-section" id="vendorSection">
+    <span class="vendor-label">¿Quién sos?</span>
+    <select class="vendor-select" id="vendorSelect">
+      <option value="">— Seleccioná tu nombre —</option>
+    </select>
+    <button class="enter-btn" id="enterBtn" disabled onclick="enterApp()">Entrar →</button>
+  </div>
+  <div class="base-info" id="baseInfo"></div>
+</div>
+
+<div id="app">
+  <div class="app-header">
+    <div>
+      <div class="header-name" id="headerName">—</div>
+      <div class="header-date" id="headerDate">—</div>
+    </div>
+    <button class="search-btn" onclick="openSearch()">🔍</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-marca="sal" onclick="switchMarca('sal')">Salentein</div>
+    <div class="tab" data-marca="cam" onclick="switchMarca('cam')">Campari</div>
+    <div class="tab" data-marca="cbs" onclick="switchMarca('cbs')">CBSe</div>
+    <div class="tab" data-marca="gen" onclick="switchMarca('gen')">General</div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<div id="searchOverlay">
+  <div class="search-header">
+    <input class="search-input" id="searchInput" type="text" placeholder="Buscar cliente..." oninput="doSearch(this.value)" autocomplete="off">
+    <button class="search-close" onclick="closeSearch()">Cerrar</button>
+  </div>
+  <div class="search-results" id="searchResults">
+    <div class="empty"><div class="empty-text" style="font-size:24px;margin-bottom:8px">🔎</div><div class="empty-text">Escribí el nombre del cliente</div><div class="empty-sub">Muestra estado en las 3 marcas</div></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hebEjbqyhfK7FzRvBOrogXMdI6LATez1WgfJGOy4tGc/export?format=tsv&gid=0';
+
+window.addEventListener('load', autoCargar);
+
+async function autoCargar() {
+  const pf = document.getElementById('progressFill');
+  const pt = document.getElementById('progressText');
+  pt.textContent = 'Actualizando datos...';
+  pf.style.width = '20%';
+  try {
+    const res = await fetch(SHEET_URL);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if(text.trim().startsWith('<!')) throw new Error('Sin acceso a la hoja');
+    pf.style.width = '60%';
+    pt.textContent = 'Procesando...';
+    setTimeout(() => {
+      try {
+        recentRows = parseCSVText(text);
+        pf.style.width = '100%';
+        pt.textContent = 'Listo — ' + recentRows.length.toLocaleString() + ' registros';
+        setTimeout(() => buildVendorSelect(), 400);
+      } catch(err) {
+        mostrarErrorCarga('Error al procesar los datos: ' + err.message);
+      }
+    }, 50);
+  } catch(err) {
+    mostrarErrorCarga('No se pudo conectar. Cargá el CSV manualmente.');
+  }
+}
+
+function mostrarErrorCarga(msg) {
+  document.getElementById('progressText').textContent = msg;
+  document.getElementById('progressFill').style.background = '#f87171';
+  document.getElementById('uploadCard').style.display = 'block';
+}
+
+const MARCAS = {
+  sal:{key:'BODEGAS SALENTEIN',keyUsh:'BODEGAS SALENTEIN USHUAIA',label:'Salentein',color:'#4ade80',
+    skus:[15046,15023,13039,13062,15053,15081],skusUsh:[25046,25023,23039,23062,25053,25081],
+    skuLabels:['Portillo Malbec','Sal. Rva Malbec','Callia Malbec','Esperado Malbec','Killka Malbec','Numina Malbec']},
+  cam:{key:'GRUPO CAMPARI',keyUsh:'GRUPO CAMPARI USHUAIA',label:'Campari',color:'#facc15',
+    skus:[19107,19005,19064,19040],skusUsh:[29107,29005,29064,29040],
+    skuLabels:['SKYY Cosmic','Campari','Cynar','Aperol']},
+  cbs:{key:'CBSe',keyUsh:null,label:'CBSe',color:'#c084fc',
+    skus:[12201,12210,12211,12223],skusUsh:[],
+    skuLabels:['Serrana','Naranja','Pomelo','Mateando']},
+};
+const ON_TRADE_IDS=[2126,2127,2124];
+const DORM_DIAS=30;
+let recentRows=[],vendorRows=[];
+let vendorId=null,vendorName='',isOnTrade=false,isUshuaia=false;
+let curMarca='sal',showLimits={cob:10,depth:10,acc:8};
+let mesActual,mesAnterior,hoy;
+
+// ── FALLBACK: carga manual si no hay conexión ──
+document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])parseCSV(e.target.files[0])});
+
+function parseCSV(file){
+  const pw=document.getElementById('progressWrap'),pf=document.getElementById('progressFill'),pt=document.getElementById('progressText');
+  pw.style.display='block';document.getElementById('uploadCard').style.display='none';
+  pt.textContent='Leyendo archivo...';pf.style.width='20%';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    pf.style.width='50%';pt.textContent='Procesando...';
+    setTimeout(()=>{
+      try{
+        recentRows=parseCSVText(e.target.result);
+        pf.style.width='90%';
+        pt.textContent='Listo — '+recentRows.length.toLocaleString()+' registros';
+        setTimeout(()=>{pf.style.width='100%';buildVendorSelect()},300);
+      }catch(err){pt.textContent='Error: '+err.message;pf.style.background='#f87171'}
+    },50);
+  };
+  reader.readAsText(file,'latin1');
+}
+
+function parseCSVText(text){
+  const lines=text.split('\n');
+  const sep=lines[0].includes('\t')?'\t':';';
+  const headers=lines[0].split(sep);
+  // Usar primera ocurrencia de headers duplicados (ej. 'Artículo' aparece dos veces)
+  const idx={};headers.forEach((h,i)=>{const k=h.trim();if(!(k in idx))idx[k]=i;});
+  const FOCO=['BODEGAS SALENTEIN','GRUPO CAMPARI','CBSe','BODEGAS SALENTEIN USHUAIA','GRUPO CAMPARI USHUAIA'];
+  const out=[];
+  for(let i=1;i<lines.length;i++){
+    const line=lines[i].trim();if(!line)continue;
+    const cols=line.split(sep);
+    if((cols[idx['Nom Sis TCOM']]||'').trim()!=='Factura de Venta')continue;
+    const cant=parseFloat((cols[idx['Cantidad Umd. Compra.']]||'0').replace(',','.'));
+    if(!(cant>0))continue;
+    const fecha=parseDate((cols[idx['Fec. Comp.']]||'').trim());
+    if(!fecha)continue;
+    const nm=(cols[idx['Nomcomer']]||'').trim();
+    if(!nm)continue;
+    out.push({
+      fecha,mes:fecha.getMonth(),
+      cliente:parseInt(cols[idx['Cliente']])||0,
+      nombreCliente:(cols[idx['Nombre Cliente']]||'').trim(),
+      localidad:(cols[idx['Nombre localidad']]||'').trim(),
+      vendedor:parseInt(cols[idx['Vendedor']])||0,
+      nombreVendedor:(cols[idx['Nombre vendedor']]||'').trim(),
+      nomcomer:nm,
+      articulo:parseInt(cols[idx['Artículo']])||0,
+      descripcion:(cols[idx['Descripción']]||'').trim(),
+      cant,
+      neto:parseFloat((cols[idx['Neto']]||'0').replace(/\./g,'').replace(',','.')),
+      esFoco:FOCO.includes(nm),
+    });
+  }
+  return out;
+}
+
+function parseDate(s){
+  if(!s)return null;
+  const p=s.split('/');if(p.length!==3)return null;
+  const d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+  if(!d||!m||!y)return null;
+  return new Date(y,m-1,d);
+}
+
+function buildVendorSelect(){
+  hoy=new Date();
+  mesActual=hoy.getMonth();
+  mesAnterior=mesActual===0?11:mesActual-1;
+  // Fecha del último dato en el CSV
+  const fechaUlt=recentRows.reduce((max,r)=>r.fecha>max?r.fecha:max,new Date(0));
+  // Armar vendedores dinámicamente desde el CSV cargado
+  const vendedores={};
+  recentRows.forEach(r=>{if(r.vendedor&&r.nombreVendedor)vendedores[r.vendedor]=r.nombreVendedor;});
+  const sel=document.getElementById('vendorSelect');
+  // Opción "Todos" primero
+  const oTodos=document.createElement('option');oTodos.value='todos';oTodos.textContent='— Todos los vendedores —';sel.appendChild(oTodos);
+  Object.entries(vendedores).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([id,name])=>{
+    const o=document.createElement('option');o.value=id;o.textContent=name;sel.appendChild(o);
+  });
+  sel.addEventListener('change',()=>{document.getElementById('enterBtn').disabled=!sel.value});
+  document.getElementById('vendorSection').style.display='block';
+  document.getElementById('baseInfo').textContent='Datos al '+formatDate(fechaUlt)+' · '+recentRows.length.toLocaleString()+' registros';
+}
+
+function enterApp(){
+  const sel=document.getElementById('vendorSelect');
+  vendorId=sel.value; // 'todos' o id numérico como string
+  vendorName=sel.options[sel.selectedIndex].text;
+  isOnTrade=vendorId!=='todos'&&ON_TRADE_IDS.includes(parseInt(vendorId));
+  isUshuaia=vendorId!=='todos'&&parseInt(vendorId)===2122;
+  // Pre-filtrar filas del vendedor una sola vez
+  vendorRows=vendorId==='todos'?recentRows:recentRows.filter(r=>String(r.vendedor)===vendorId);
+  document.getElementById('loadScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  const badge=vendorId==='todos'?'<span class="ontrade-badge" style="background:#1a1a1a;color:var(--muted)">TOTAL</span>':isOnTrade?'<span class="ontrade-badge">ON TRADE</span>':isUshuaia?'<span class="ontrade-badge" style="background:#0a1a2e">USHUAIA</span>':'';
+  document.getElementById('headerName').innerHTML=firstName(vendorName)+badge;
+  document.getElementById('headerDate').textContent=formatDate(hoy)+' · '+monthName(mesActual);
+  switchMarca('sal');
+}
+
+// ── CORE: todo calculado desde el CSV cargado ──
+function getSkus(marcaKey){
+  const m=Object.values(MARCAS).find(x=>x.key===marcaKey);
+  if(!m)return{skus:[],labels:[]};
+  let skus=[...(isUshuaia?m.skusUsh:m.skus)];
+  let labels=[...m.skuLabels];
+  if(isOnTrade&&marcaKey==='CBSe'){
+    const i=labels.indexOf('Mateando');
+    if(i>-1){skus.splice(i,1);labels.splice(i,1);}
+  }
+  return{skus,labels};
+}
+
+function buildClientList(marca){
+  const m=MARCAS[marca];
+  // En modo "Todos" incluir siempre ambas keys (CENTRAL + USHUAIA)
+  const FOCO_KEYS=(isUshuaia||vendorId==='todos')&&m.keyUsh?[m.key,m.keyUsh]:[m.key];
+  const{skus}=getSkus(m.key);
+
+  // Un solo recorrido del CSV para construir todos los datos del cliente
+  const clientes={};
+  vendorRows.forEach(r=>{
+    const cid=String(r.cliente);
+    if(!clientes[cid])clientes[cid]={
+      id:cid,nombre:r.nombreCliente,localidad:r.localidad,
+      total:0,actMes:0,actAnt:0,ultFecha:null,vendorName:'',
+      infalt:new Set(),arts:{},otras:{},tieneOtrasMes:false,
+    };
+    const c=clientes[cid];
+    if(FOCO_KEYS.includes(r.nomcomer)){
+      c.total+=r.cant;
+      if(r.mes===mesActual)c.actMes+=r.cant;
+      if(r.mes===mesAnterior)c.actAnt+=r.cant;
+      if(!c.ultFecha||r.fecha>c.ultFecha){c.ultFecha=r.fecha;c.vendorName=r.nombreVendedor;}
+      // Normalizar SKU Ushuaia al regular para que el match de infaltables funcione
+      let artNorm=r.articulo;
+      if(m.skusUsh){const ui=m.skusUsh.indexOf(r.articulo);if(ui>=0)artNorm=m.skus[ui];}
+      if(skus.includes(artNorm))c.infalt.add(artNorm);
+      if(!c.arts[r.articulo])c.arts[r.articulo]={d:r.descripcion,c:0};
+      c.arts[r.articulo].c+=r.cant;
+    } else if(!r.esFoco){
+      const nm=r.nomcomer;
+      if(!c.otras[nm])c.otras[nm]={u:0,arts:{}};
+      c.otras[nm].u+=r.cant;
+      if(r.mes===mesActual)c.tieneOtrasMes=true;
+      if(!c.otras[nm].arts[r.articulo])c.otras[nm].arts[r.articulo]={d:r.descripcion,c:0};
+      c.otras[nm].arts[r.articulo].c+=r.cant;
+    }
+  });
+
+  // Solo clientes con compras de esta marca; calcular semáforo y mix
+  return Object.values(clientes)
+    .filter(c=>c.total>0)
+    .map(c=>{
+      const diasSin=c.ultFecha?Math.floor((hoy-c.ultFecha)/86400000):999;
+      const sem=diasSin<=15?'green':diasSin<=DORM_DIAS?'orange':'red';
+      const skuMatch=skus.filter(s=>c.infalt.has(s)).length;
+      return{
+        id:c.id,nombre:c.nombre,localidad:c.localidad,vendorName:c.vendorName,
+        unidadesAnio:c.total,
+        unidadesMes:c.actMes,
+        unidadesAnt:c.actAnt,
+        skuMatch,totalSkus:skus.length,
+        infalt:c.infalt,diasSin,sem,
+        arts:c.arts,otras:c.otras,
+        tieneOtrasMes:c.tieneOtrasMes,
+      };
+    });
+}
+
+function getTotalesMarca(marca){
+  const m=MARCAS[marca];
+  const FOCO_KEYS=(isUshuaia||vendorId==='todos')&&m.keyUsh?[m.key,m.keyUsh]:[m.key];
+  // Totales por mes calendario desde el CSV
+  const porMes={};
+  vendorRows.filter(r=>FOCO_KEYS.includes(r.nomcomer)).forEach(r=>{
+    porMes[r.mes]=(porMes[r.mes]||0)+r.cant;
+  });
+  const uMes=porMes[mesActual]||0;
+  const uAnt=porMes[mesAnterior]||0;
+  // Promedio de hasta los últimos 3 meses anteriores disponibles en el CSV
+  const mesesPrev=[];
+  for(let i=1;i<=6&&mesesPrev.length<3;i++){
+    const m3=(mesActual-i+12)%12;
+    if(porMes[m3]!==undefined)mesesPrev.push(porMes[m3]);
+  }
+  const prom3=mesesPrev.length>0?Math.round(mesesPrev.reduce((a,b)=>a+b,0)/mesesPrev.length):null;
+  return{uMes,uAnt,prom3,mesesPrev};
+}
+
+// ── SCORING ──
+function volumenTier(u){return u>=300?3:u>=120?2:u>=40?1:0}
+function dormidoTier(d){return d>60?4:d>30?3:d>15?1:0}
+function mixTier(sm,ts){const f=ts-sm;return f>=3?3:f>=2?2:f>=1?1:0}
+
+function getScore(c){
+  return volumenTier(c.unidadesAnio)+dormidoTier(c.diasSin)+mixTier(c.skuMatch,c.totalSkus)+(c.tieneOtrasMes&&c.unidadesMes===0?2:0);
+}
+
+function getAccion(c){
+  const faltan=c.totalSkus-c.skuMatch;
+  if(c.diasSin>60&&c.unidadesAnio>=120)
+    return{badge:'REACTIVAR',cls:'tag-dorm',txt:`No compra hace ${c.diasSin} días. Era cliente importante. Entrá con lo que más rotó.`};
+  if(c.diasSin>DORM_DIAS&&c.tieneOtrasMes)
+    return{badge:'ESTÁ COMPRANDO',cls:'tag-mix',txt:`Activo en otras marcas este mes pero sin compra en esta. Aprovechá la visita.`};
+  if(c.diasSin>DORM_DIAS)
+    return{badge:'DORMIDO',cls:'tag-dorm',txt:`Hace ${c.diasSin} días sin compra. Volvé con lo conocido y una propuesta corta.`};
+  if(faltan>=2&&c.unidadesMes>0)
+    return{badge:'MIX BAJO',cls:'tag-mix',txt:`Activo pero con ${c.skuMatch}/${c.totalSkus} infaltables. Completar es más fácil que vender de cero.`};
+  if(faltan===1&&c.unidadesMes>0)
+    return{badge:'COMPLETAR',cls:'tag-mix',txt:`Le falta 1 infaltable. Fácil de cerrar en la misma visita.`};
+  if(c.unidadesMes>0&&faltan===0)
+    return{badge:'AL DÍA',cls:'tag-ok',txt:`Activo con mix completo. Mantenerlo cerca y repetir antes de que se enfríe.`};
+  return{badge:'REVISAR',cls:'tag-ok',txt:`Tiene historial. Mirá lo que rota y ofrecé un complemento lógico.`};
+}
+
+// ── RENDER ──
+function switchMarca(marca){
+  curMarca=marca;showLimits={cob:10,depth:10,acc:8};
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.marca===marca));
+  if(marca==='gen')renderGeneral();
+  else renderMarca(marca);
+}
+
+function renderGeneral(){
+  // Un solo recorrido: todo el CSV de este vendedor, sin filtro de marca
+  const porMesCj={},porMesNeto={},clientes={},proveedores={};
+  const FOCO_KEYS_ALL=['BODEGAS SALENTEIN','BODEGAS SALENTEIN USHUAIA','GRUPO CAMPARI','GRUPO CAMPARI USHUAIA','CBSe'];
+
+  vendorRows.forEach(r=>{
+    porMesCj[r.mes]=(porMesCj[r.mes]||0)+r.cant;
+    porMesNeto[r.mes]=(porMesNeto[r.mes]||0)+r.neto;
+    const cid=String(r.cliente);
+    if(!clientes[cid])clientes[cid]={nombre:r.nombreCliente,localidad:r.localidad,total:0,actMes:0,ultFecha:null,vendorName:'',provs:{}};
+    const c=clientes[cid];
+    c.total+=r.cant;
+    if(r.mes===mesActual)c.actMes+=r.cant;
+    if(!c.ultFecha||r.fecha>c.ultFecha){c.ultFecha=r.fecha;c.vendorName=r.nombreVendedor;}
+    const nm=r.nomcomer;
+    if(!c.provs[nm])c.provs[nm]=0;
+    c.provs[nm]+=r.cant;
+    if(!proveedores[nm])proveedores[nm]={total:0,mes:0,ant:0,netoTotal:0,netoMes:0,esFoco:FOCO_KEYS_ALL.includes(nm)};
+    proveedores[nm].total+=r.cant;
+    proveedores[nm].netoTotal+=r.neto;
+    if(r.mes===mesActual){proveedores[nm].mes+=r.cant;proveedores[nm].netoMes+=r.neto;}
+    if(r.mes===mesAnterior)proveedores[nm].ant+=r.cant;
+  });
+
+  // Cajas
+  const uMes=porMesCj[mesActual]||0;
+  const uAnt=porMesCj[mesAnterior]||0;
+  const mesesPrevCj=[];
+  for(let i=1;i<=6&&mesesPrevCj.length<3;i++){const m3=(mesActual-i+12)%12;if(porMesCj[m3]!==undefined)mesesPrevCj.push(porMesCj[m3]);}
+  const prom3Cj=mesesPrevCj.length>0?Math.round(mesesPrevCj.reduce((a,b)=>a+b,0)/mesesPrevCj.length):null;
+
+  // Pesos
+  const nMes=porMesNeto[mesActual]||0;
+  const nAnt=porMesNeto[mesAnterior]||0;
+  const mesesPrevN=[];
+  for(let i=1;i<=6&&mesesPrevN.length<3;i++){const m3=(mesActual-i+12)%12;if(porMesNeto[m3]!==undefined)mesesPrevN.push(porMesNeto[m3]);}
+  const prom3N=mesesPrevN.length>0?Math.round(mesesPrevN.reduce((a,b)=>a+b,0)/mesesPrevN.length):null;
+
+  const diaHoy=hoy.getDate();
+  const diasMes=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+  const proyCj=diaHoy>0?Math.round(uMes/diaHoy*diasMes):0;
+  const proyN=diaHoy>0?Math.round(nMes/diaHoy*diasMes):0;
+  const inicioMes=diaHoy<=3||uMes===0;
+  const pctVsAntCj=(!inicioMes&&uAnt>0)?((proyCj-uAnt)/uAnt*100):null;
+  const pctVsPromCj=(!inicioMes&&prom3Cj>0)?((proyCj-prom3Cj)/prom3Cj*100):null;
+  const pctVsAntN=(!inicioMes&&nAnt>0)?((proyN-nAnt)/nAnt*100):null;
+
+  // Cobertura
+  const allC=Object.values(clientes);
+  const universo=allC.length;
+  const activosMes=allC.filter(c=>c.actMes>0).length;
+  const dormidosList=allC
+    .filter(c=>{const d=c.ultFecha?Math.floor((hoy-c.ultFecha)/86400000):999;return d>DORM_DIAS;})
+    .map(c=>({...c,diasSin:Math.floor((hoy-c.ultFecha)/86400000)}))
+    .sort((a,b)=>b.diasSin-a.diasSin);
+
+  // Avance cajas
+  const progPct=uAnt>0?Math.min(Math.round(uMes/uAnt*100),999):0;
+  const progColor=progPct>=90?'#4ade80':progPct>=60?'#fb923c':'#f87171';
+
+  const mkDelta=(pctAnt,pctProm,mesAnt)=>{
+    let h='';
+    if(pctAnt!==null){
+      const clsA=pctAnt>=0?'delta-up':'delta-down';
+      h+=`<div class="stat-delta ${clsA}">${pctAnt>=0?'▲':'▼'} ${pctAnt>=0?'+':''}${pctAnt.toFixed(0)}% vs ${monthName(mesAnt)}</div>`;
+      if(pctProm!==null){
+        const clsP=pctProm>=0?'delta-up':'delta-down';
+        h+=`<div class="stat-delta ${clsP}" style="opacity:.7">${pctProm>=0?'▲':'▼'} ${pctProm>=0?'+':''}${pctProm.toFixed(0)}% vs prom. 3m</div>`;
+      }
+    }
+    return h;
+  };
+  const fmtPesos=n=>'$'+fmt(Math.round(n));
+
+  // Mix por marca — cajas y pesos del MES ACTUAL
+  const focoMes={
+    sal:{label:'Salentein',color:'#4ade80',
+      cj:(proveedores['BODEGAS SALENTEIN']?.mes||0)+(proveedores['BODEGAS SALENTEIN USHUAIA']?.mes||0),
+      neto:(proveedores['BODEGAS SALENTEIN']?.netoMes||0)+(proveedores['BODEGAS SALENTEIN USHUAIA']?.netoMes||0)},
+    cam:{label:'Campari',color:'#facc15',
+      cj:(proveedores['GRUPO CAMPARI']?.mes||0)+(proveedores['GRUPO CAMPARI USHUAIA']?.mes||0),
+      neto:(proveedores['GRUPO CAMPARI']?.netoMes||0)+(proveedores['GRUPO CAMPARI USHUAIA']?.netoMes||0)},
+    cbs:{label:'CBSe',color:'#c084fc',
+      cj:proveedores['CBSe']?.mes||0,
+      neto:proveedores['CBSe']?.netoMes||0},
+  };
+  const totalFocoMes=Object.values(focoMes).reduce((s,v)=>s+v.cj,0);
+  const otrasMesCj=uMes-totalFocoMes;
+  const otrasMesNeto=nMes-Object.values(focoMes).reduce((s,v)=>s+v.neto,0);
+  const brandRows=[
+    ...Object.values(focoMes),
+    {label:'Otras marcas',color:'#4a90b8',cj:otrasMesCj,neto:otrasMesNeto}
+  ].filter(b=>b.cj>0).sort((a,b)=>b.cj-a.cj);
+  const maxBrand=brandRows[0]?.cj||1;
+  const brandHtml=brandRows.map(b=>`
+    <div class="brand-row">
+      <div class="brand-dot" style="background:${b.color}"></div>
+      <span class="brand-label">${b.label}</span>
+      <div class="brand-bar-wrap"><div class="brand-bar" style="width:${Math.round(b.cj/maxBrand*100)}%;background:${b.color}"></div></div>
+      <span class="brand-pct">${uMes>0?Math.round(b.cj/uMes*100):0}%</span>
+      <span class="brand-cj">${fmt(b.cj)} cj</span>
+    </div>`).join('');
+
+  // Ranking proveedores — fusionar variantes Ushuaia con su principal antes de mostrar
+  const USH_MAP={'BODEGAS SALENTEIN USHUAIA':'BODEGAS SALENTEIN','GRUPO CAMPARI USHUAIA':'GRUPO CAMPARI'};
+  const provDisplay={};
+  Object.entries(proveedores).forEach(([nm,dat])=>{
+    const key=USH_MAP[nm]||nm;
+    if(!provDisplay[key])provDisplay[key]={...dat};
+    else{provDisplay[key].total+=dat.total;provDisplay[key].mes+=dat.mes;provDisplay[key].ant+=dat.ant;provDisplay[key].netoTotal+=dat.netoTotal;provDisplay[key].netoMes+=dat.netoMes;}
+  });
+  const topProvs=Object.entries(provDisplay)
+    .filter(([,d])=>d.mes>0||d.ant>0)
+    .sort((a,b)=>b[1].mes-a[1].mes).slice(0,12);
+  const maxProv=topProvs[0]?.[1].mes||1;
+  const provHtml=topProvs.map(([nm,dat],i)=>{
+    const color=dat.esFoco?(nm.includes('SALENTEIN')?'#4ade80':nm.includes('CAMPARI')?'#facc15':'#c084fc'):'#4a90b8';
+    const delta=dat.ant>0?((dat.mes-dat.ant)/dat.ant*100):null;
+    const deltaStr=delta===null
+      ?`<span style="font-size:9px;color:var(--muted)">sin ant.</span>`
+      :delta>=0
+        ?`<span style="font-size:9px;color:var(--green)">▲+${delta.toFixed(0)}%</span>`
+        :`<span style="font-size:9px;color:var(--red)">▼${delta.toFixed(0)}%</span>`;
+    return`<div class="prov-row">
+      <span class="prov-rank">${i+1}</span>
+      <span class="prov-name">${escHtml(nm)}</span>
+      <div class="prov-bar-wrap"><div class="prov-bar" style="width:${Math.round(dat.mes/maxProv*100)}%;background:${color}"></div></div>
+      <span class="prov-cant">${fmt(dat.mes)} cj<br>${deltaStr}</span>
+    </div>`;
+  }).join('');
+
+  // Dormidos
+  const dormHtml=dormidosList.length===0
+    ?`<div class="empty"><div class="empty-text" style="color:#4ade80">✓ Sin clientes dormidos</div></div>`
+    :`<div class="client-list">${dormidosList.slice(0,showLimits.cob).map((c,i)=>{
+        const drawerId=`gd-${i}`;
+        const tp=Object.entries(c.provs).sort((a,b)=>b[1]-a[1]).slice(0,5)
+          .map(([nm,cj])=>`<div class="sku-row"><span class="sku-row-name">${escHtml(nm)}</span><span class="sku-row-cant">${fmt(cj)} cj</span></div>`).join('');
+        return`<div class="client-row">
+          <div class="client-row-header" onclick="toggleDrawer('${drawerId}')">
+            <div class="semaforo sem-red"></div>
+            <div class="client-info">
+              <div class="client-name">${escHtml(c.nombre)}</div>
+              <div class="client-meta">${escHtml(c.localidad)} · hace ${c.diasSin} días${vendorId==='todos'&&c.vendorName?' · '+escHtml(firstName(c.vendorName)):''}</div>
+            </div>
+            <div class="client-right">
+              <div class="client-units" style="color:var(--muted)">${fmt(c.total)}<span style="font-size:9px;color:var(--muted)"> cj período</span></div>
+            </div>
+            <div class="chevron" id="chev-${drawerId}">▼</div>
+          </div>
+          <div class="client-drawer" id="${drawerId}">
+            <div class="drawer-section">
+              <div class="drawer-title">Lo que compra · período</div>
+              <div class="sku-rows">${tp}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${dormidosList.length>showLimits.cob?`<div class="show-more" onclick="showMore('cob',${dormidosList.length},'gen')">Ver ${dormidosList.length-showLimits.cob} más →</div>`:''}`;
+
+  document.getElementById('content').innerHTML=`
+    <div class="section-title">Cajas · ${monthName(mesActual)}</div>
+    ${inicioMes?`<div class="stat-card" style="margin-bottom:10px">
+      <div class="stat-label">Inicio de mes</div>
+      <div style="font-size:15px;font-weight:700;margin-top:4px">Sin datos suficientes para proyectar</div>
+      <div class="stat-sub" style="margin-top:6px">Prom. 3m: ${prom3Cj!==null?fmt(prom3Cj)+' cj':'—'}</div>
+    </div>`:`
+    <div class="ritmo-grid">
+      <div class="stat-card">
+        <div class="stat-label">Este mes</div>
+        <div class="stat-value">${fmt(uMes)}</div>
+        <div class="stat-sub">cajas totales</div>
+        ${mkDelta(pctVsAntCj,pctVsPromCj,mesAnterior)}
+        ${prom3Cj!==null?`<div class="stat-sub" style="margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">Prom. 3m: ${fmt(prom3Cj)} cj</div>`:''}
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mes anterior</div>
+        <div class="stat-value">${fmt(uAnt)}</div>
+        <div class="stat-sub">cajas · ${monthName(mesAnterior)}</div>
+      </div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-header"><span class="prog-label">Avance vs mes ant.</span><span class="prog-pct" style="color:${progColor}">${progPct}%</span></div>
+      <div class="prog-track"><div class="prog-bar" style="width:${Math.min(progPct,100)}%;background:${progColor}"></div></div>
+    </div>
+    <div class="proy-card">
+      <div><div class="proy-label">Proyección cajas fin de mes</div><div class="proy-value">${fmt(proyCj)} cj.</div></div>
+      ${pctVsPromCj===null?'':pctVsPromCj>=5?`<span class="proy-badge badge-ok">↑ En ritmo</span>`:pctVsPromCj>=-10?`<span class="proy-badge badge-warn">~ Ajustado</span>`:`<span class="proy-badge badge-bad">↓ Atención</span>`}
+    </div>
+    <div class="section-title">Pesos netos · ${monthName(mesActual)}</div>
+    <div class="ritmo-grid">
+      <div class="stat-card">
+        <div class="stat-label">Este mes</div>
+        <div class="stat-value" style="font-size:20px">${fmtPesos(nMes)}</div>
+        <div class="stat-sub">neto sin impuestos</div>
+        ${mkDelta(pctVsAntN,null,mesAnterior)}
+        ${prom3N!==null?`<div class="stat-sub" style="margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">Prom. 3m: ${fmtPesos(prom3N)}</div>`:''}
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mes anterior</div>
+        <div class="stat-value" style="font-size:20px">${fmtPesos(nAnt)}</div>
+        <div class="stat-sub">neto · ${monthName(mesAnterior)}</div>
+      </div>
+    </div>
+    <div class="proy-card">
+      <div><div class="proy-label">Proyección pesos fin de mes</div><div class="proy-value" style="font-size:18px">${fmtPesos(proyN)}</div></div>
+    </div>`}
+    <div class="section-title">Cobertura · todos los productos</div>
+    <div class="cob-summary">
+      <div class="cob-card"><div class="cob-num">${universo}</div><div class="cob-lbl">Universo</div></div>
+      <div class="cob-card"><div class="cob-num" style="color:var(--text)">${activosMes}</div><div class="cob-lbl">Este mes</div></div>
+      <div class="cob-card"><div class="cob-num" style="color:#f87171">${dormidosList.length}</div><div class="cob-lbl">Dormidos</div></div>
+    </div>
+    <div class="section-title">Mix este mes por marca</div>
+    <div class="brand-summary">${brandHtml}</div>
+    <div class="section-title">Ranking proveedores · ${monthName(mesActual)} vs ${monthName(mesAnterior)}</div>
+    <div class="prov-list">${provHtml}</div>
+    <div class="section-title">Dormidos · sin comprar en +${DORM_DIAS} días</div>
+    ${dormHtml}`;
+}
+
+function renderMarca(marca){
+  const m=MARCAS[marca];
+  const{uMes,uAnt,prom3,mesesPrev}=getTotalesMarca(marca);
+  const allClients=buildClientList(marca);
+  const{skus,labels}=getSkus(m.key);
+
+  const diaHoy=hoy.getDate();
+  const diasMes=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+  const proy=diaHoy>0?Math.round(uMes/diaHoy*diasMes):0;
+  const inicioMes=diaHoy<=3||uMes===0;
+  // Delta: vs mes anterior Y vs promedio 3 meses
+  const pctVsAnt=(!inicioMes&&uAnt>0)?((proy-uAnt)/uAnt*100):null;
+  const pctVsProm=(!inicioMes&&prom3>0)?((proy-prom3)/prom3*100):null;
+
+  // Universo, activos y dormidos vienen directo de allClients (100% del CSV)
+  const dormidos=allClients.filter(c=>c.diasSin>DORM_DIAS).sort((a,b)=>b.diasSin-a.diasSin);
+  const conMes=allClients.filter(c=>c.unidadesMes>0).length;
+
+  const depthList=allClients
+    .filter(c=>c.unidadesMes>0&&c.skuMatch<skus.length)
+    .sort((a,b)=>(b.unidadesMes*(1-b.skuMatch/b.totalSkus))-(a.unidadesMes*(1-a.skuMatch/a.totalSkus)));
+
+  const accionList=allClients
+    .filter(c=>c.diasSin>15||c.skuMatch<skus.length)
+    .map(c=>({...c,score:getScore(c),accion:getAccion(c)}))
+    .sort((a,b)=>b.score-a.score||b.unidadesAnio-a.unidadesAnio);
+
+  // Días hábiles restantes
+  let habRest=0;
+  const fin=new Date(hoy.getFullYear(),hoy.getMonth()+1,0);
+  for(let d=new Date(hoy);d<=fin;d.setDate(d.getDate()+1)){if(d.getDay()>=1&&d.getDay()<=5)habRest++;}
+  const diasHtml=habRest<=5?`<span style="color:var(--orange)">${habRest} días hábiles restantes</span>`
+    :`<span style="color:var(--muted)">${habRest} días hábiles restantes</span>`;
+
+  const progPct=uAnt>0?Math.min(Math.round(uMes/uAnt*100),999):0;
+  const progColor=progPct>=90?'#4ade80':progPct>=60?'#fb923c':'#f87171';
+  let deltaHtml='';
+  if(pctVsAnt!==null){
+    const clsA=pctVsAnt>=0?'delta-up':'delta-down';
+    const signA=pctVsAnt>=0?'+':'';
+    const arrowA=pctVsAnt>=0?'▲':'▼';
+    deltaHtml=`<div class="stat-delta ${clsA}">${arrowA} ${signA}${pctVsAnt.toFixed(0)}% vs ${monthName(mesAnterior)}</div>`;
+    if(pctVsProm!==null){
+      const clsP=pctVsProm>=0?'delta-up':'delta-down';
+      const signP=pctVsProm>=0?'+':'';
+      const arrowP=pctVsProm>=0?'▲':'▼';
+      deltaHtml+=`<div class="stat-delta ${clsP}" style="opacity:.7">${arrowP} ${signP}${pctVsProm.toFixed(0)}% vs prom. 3m</div>`;
+    }
+  }
+  const proyBadge=inicioMes?'':pctVsProm===null?'':pctVsProm>=5?`<span class="proy-badge badge-ok">↑ En ritmo</span>`:pctVsProm>=-10?`<span class="proy-badge badge-warn">~ Ajustado</span>`:`<span class="proy-badge badge-bad">↓ Atención</span>`;
+
+  // Meta operativa: usar promedio 3 meses como referencia si está disponible
+  const metaRef=prom3!==null?prom3:uAnt;
+  const metaLabel=prom3!==null?`Prom. ${mesesPrev.length} meses ant.`:monthName(mesAnterior);
+  const metaHtml=inicioMes?'':(metaRef<=uMes||metaRef===0)
+    ?`<div class="proy-card"><div><div class="proy-label">Meta operativa vs ${metaLabel}</div><div class="proy-value" style="color:${m.color}">Arriba del promedio</div></div><span class="proy-badge badge-ok">↑ Superando</span></div>`
+    :`<div class="proy-card"><div><div class="proy-label">Para igualar ${metaLabel}</div><div class="proy-value">${fmt(metaRef-uMes)} cj. restantes</div><div class="stat-sub" style="margin-top:4px">Necesitás ${fmt(habRest>0?Math.ceil((metaRef-uMes)/habRest):metaRef-uMes)} cj/día hábil</div></div><span class="proy-badge badge-warn">A seguir</span></div>`;
+
+  const dormHtml=dormidos.length===0
+    ?`<div class="empty"><div class="empty-text" style="color:#4ade80">✓ Sin clientes dormidos</div></div>`
+    :`<div class="client-list" id="cobList">${dormidos.slice(0,showLimits.cob).map((c,i)=>clientRowHtml(c,m.color,skus,labels,i)).join('')}</div>
+     ${dormidos.length>showLimits.cob?`<div class="show-more" onclick="showMore('cob',${dormidos.length},'${marca}')">Ver ${dormidos.length-showLimits.cob} más →</div>`:''}`;
+
+  const depthHtml=depthList.length===0
+    ?`<div class="empty"><div class="empty-text" style="color:#4ade80">✓ Mix completo en activos</div></div>`
+    :`<div class="client-list" id="depthList">${depthList.slice(0,showLimits.depth).map((c,i)=>clientRowHtml(c,m.color,skus,labels,i+100)).join('')}</div>
+     ${depthList.length>showLimits.depth?`<div class="show-more" onclick="showMore('depth',${depthList.length},'${marca}')">Ver ${depthList.length-showLimits.depth} más →</div>`:''}`;
+
+  const accHtml=accionList.length===0
+    ?`<div class="empty"><div class="empty-text" style="color:#4ade80">✓ Cartera al día</div></div>`
+    :`<div class="client-list">${accionList.slice(0,showLimits.acc).map((c,i)=>clientRowHtml(c,m.color,skus,labels,i+200)).join('')}</div>
+     ${accionList.length>showLimits.acc?`<div class="show-more" onclick="showMore('acc',${accionList.length},'${marca}')">Ver ${accionList.length-showLimits.acc} más →</div>`:''}`;
+
+  document.getElementById('content').innerHTML=`
+    <div class="section-title">Ritmo del mes</div>
+    ${inicioMes?`
+    <div class="stat-card" style="margin-bottom:10px">
+      <div class="stat-label">Inicio de mes</div>
+      <div style="font-size:15px;font-weight:700;margin-top:4px">Sin datos suficientes para proyectar</div>
+      <div class="stat-sub" style="margin-top:6px">Promedio últimos 3 meses: ${prom3!==null?fmt(prom3)+' cj':'—'}</div>
+    </div>`:`
+    <div class="ritmo-grid">
+      <div class="stat-card">
+        <div class="stat-label">Este mes</div>
+        <div class="stat-value" style="color:${m.color}">${fmt(uMes)}</div>
+        <div class="stat-sub">cajas · ${monthName(mesActual)}</div>
+        ${deltaHtml}
+        ${pctVsProm!==null?`<div class="stat-sub" style="margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--muted)">Prom. 3m: ${fmt(prom3)} cj</div>`:''}
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mes anterior</div>
+        <div class="stat-value">${fmt(uAnt)}</div>
+        <div class="stat-sub">cajas · ${monthName(mesAnterior)}</div>
+        <div class="stat-sub" style="margin-top:6px">${diasHtml}</div>
+      </div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-header"><span class="prog-label">Avance vs mes ant.</span><span class="prog-pct" style="color:${progColor}">${progPct}%</span></div>
+      <div class="prog-track"><div class="prog-bar" style="width:${Math.min(progPct,100)}%;background:${progColor}"></div></div>
+    </div>
+    <div class="proy-card">
+      <div><div class="proy-label">Proyección fin de mes</div><div class="proy-value" style="color:${m.color}">${fmt(proy)} cj.</div></div>
+      ${proyBadge}
+    </div>`}
+    ${metaHtml}
+    <div class="section-title">Cobertura</div>
+    <div class="cob-summary">
+      <div class="cob-card"><div class="cob-num">${allClients.length}</div><div class="cob-lbl">Universo</div></div>
+      <div class="cob-card"><div class="cob-num" style="color:${m.color}">${conMes}</div><div class="cob-lbl">Este mes</div></div>
+      <div class="cob-card"><div class="cob-num" style="color:#f87171">${dormidos.length}</div><div class="cob-lbl">Dormidos</div></div>
+    </div>
+    ${dormHtml}
+    <div class="section-title">Profundidad de mix</div>
+    ${depthHtml}
+    <div class="section-title">Llamá hoy</div>
+    ${accHtml}
+  `;
+}
+
+function clientRowHtml(c,color,skus,labels,idx){
+  const diasText=c.diasSin<999?`${c.diasSin}d sin compra`:'Sin historial';
+  const accion=c.accion||getAccion(c);
+
+  const infaltSet=c.infalt instanceof Set?c.infalt:new Set(c.infalt||[]);
+  const chipsHtml=skus.map((s,i)=>`<span class="infalt-chip ${infaltSet.has(s)?'chip-ok':'chip-miss'}">${labels[i]}</span>`).join('');
+
+  // Top compras de la marca foco (del año, desde BASE)
+  const comprasHtml=Object.values(c.arts).sort((a,b)=>b.c-a.c).slice(0,6)
+    .map(p=>`<div class="sku-row"><span class="sku-row-name">${escHtml(p.d)}</span><span class="sku-row-cant">${fmt(p.c)} cj</span></div>`).join('');
+
+  // Otras marcas (del año, desde BASE)
+  const otrosHtml=Object.entries(c.otras).sort((a,b)=>b[1].u-a[1].u).slice(0,4).map(([nom,dat])=>{
+    const enMes=c.tieneOtrasMes?'<span style="color:var(--orange);margin-left:4px">● mes</span>':'';
+    const prods=Object.values(dat.arts||{}).sort((a,b)=>b.c-a.c).slice(0,3)
+      .map(p=>`<div class="sku-row"><span class="sku-row-name">${escHtml(p.d)}</span><span class="sku-row-cant">${fmt(p.c)} cj</span></div>`).join('');
+    return`<div style="margin-bottom:8px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${escHtml(nom)}${enMes}</div>${prods}</div>`;
+  }).join('');
+
+  const drawerId=`dr-${idx}`;
+  return`
+    <div class="client-row">
+      <div class="client-row-header" onclick="toggleDrawer('${drawerId}')">
+        <div class="semaforo sem-${c.sem}"></div>
+        <div class="client-info">
+          <div class="client-name">${escHtml(c.nombre)}</div>
+          <div class="client-meta">${escHtml(c.localidad)} · ${diasText}${vendorId==='todos'&&c.vendorName?' · '+escHtml(firstName(c.vendorName)):''}</div>
+        </div>
+        <div class="client-right">
+          <div class="client-units" style="color:${color}">${fmt(c.unidadesMes>0?c.unidadesMes:c.unidadesAnio)}<span style="font-size:9px;color:var(--muted)">${c.unidadesMes>0?' cj mes':' cj año'}</span></div>
+          <div class="client-skus">${c.skuMatch}/${c.totalSkus} infalt.</div>
+        </div>
+        <div class="chevron" id="chev-${drawerId}">▼</div>
+      </div>
+      <div class="client-drawer" id="${drawerId}">
+        <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <span class="accion-tag ${accion.cls}">${accion.badge}</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.4;flex:1;min-width:160px">${accion.txt}</span>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-title">Infaltables · año</div>
+          <div class="infalt-grid">${chipsHtml}</div>
+        </div>
+        ${comprasHtml?`<div class="drawer-section">
+          <div class="drawer-title">Lo que compró · marca foco · año</div>
+          <div class="sku-rows">${comprasHtml}</div>
+        </div>`:''}
+        ${otrosHtml?`<div class="drawer-section">
+          <div class="drawer-title">Otras marcas que compra</div>
+          ${otrosHtml}
+        </div>`:''}
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border)">
+          Total año: <strong style="color:var(--text)">${fmt(c.unidadesAnio)} cj</strong> ·
+          Este mes: <strong style="color:${color}">${fmt(c.unidadesMes)} cj</strong> ·
+          Mes ant.: <strong style="color:var(--text)">${fmt(c.unidadesAnt)} cj</strong>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleDrawer(id){
+  const d=document.getElementById(id),ch=document.getElementById('chev-'+id);
+  const open=d.classList.toggle('open');ch.classList.toggle('open',open);
+}
+
+function showMore(tipo,total,marca){showLimits[tipo]=total;if(marca==='gen')renderGeneral();else renderMarca(marca);}
+
+// ── SEARCH ──
+function openSearch(){
+  document.getElementById('searchOverlay').style.display='flex';
+  setTimeout(()=>document.getElementById('searchInput').focus(),100);
+}
+function closeSearch(){
+  document.getElementById('searchOverlay').style.display='none';
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchResults').innerHTML=`<div class="empty"><div class="empty-text" style="font-size:24px;margin-bottom:8px">🔎</div><div class="empty-text">Escribí el nombre del cliente</div></div>`;
+}
+
+function doSearch(q){
+  if(q.length<2){document.getElementById('searchResults').innerHTML=`<div class="empty"><div class="empty-text">Escribí al menos 2 caracteres</div></div>`;return;}
+  const ql=q.toLowerCase();
+  const FOCO_ALL=['BODEGAS SALENTEIN','GRUPO CAMPARI','CBSe','BODEGAS SALENTEIN USHUAIA','GRUPO CAMPARI USHUAIA'];
+
+  // Construir índice de clientes desde el CSV (todas las marcas foco de este vendedor)
+  const clientIdx={};
+  vendorRows.forEach(r=>{
+    const cid=String(r.cliente);
+    const nombre=(r.nombreCliente||'').toLowerCase();
+    const loc=(r.localidad||'').toLowerCase();
+    if(!nombre.includes(ql)&&!loc.includes(ql))return;
+    if(!clientIdx[cid])clientIdx[cid]={
+      id:cid,nombre:r.nombreCliente,localidad:r.localidad,
+      marcas:{sal:{u:0,ultF:null,infalt:new Set(),arts:{}},cam:{u:0,ultF:null,infalt:new Set(),arts:{}},cbs:{u:0,ultF:null,infalt:new Set(),arts:{}}},
+      otras:{},
+    };
+    const c=clientIdx[cid];
+    if(r.esFoco){
+      const mk=Object.keys(MARCAS).find(k=>{const m=MARCAS[k];return(isUshuaia&&m.keyUsh?[m.key,m.keyUsh]:[m.key]).includes(r.nomcomer);});
+      if(mk){
+        const md=c.marcas[mk];
+        if(r.mes===mesActual)md.u+=r.cant;
+        if(!md.ultF||r.fecha>md.ultF)md.ultF=r.fecha;
+        const{skus}=getSkus(MARCAS[mk].key);
+        if(skus.includes(r.articulo))md.infalt.add(r.articulo);
+        if(!md.arts[r.articulo])md.arts[r.articulo]={d:r.descripcion,c:0};
+        md.arts[r.articulo].c+=r.cant;
+      }
+    } else {
+      const nm=r.nomcomer;
+      if(!c.otras[nm])c.otras[nm]={u:0,arts:{}};
+      c.otras[nm].u+=r.cant;
+      if(!c.otras[nm].arts[r.articulo])c.otras[nm].arts[r.articulo]={d:r.descripcion,c:0};
+      c.otras[nm].arts[r.articulo].c+=r.cant;
+    }
+  });
+
+  const found=Object.values(clientIdx);
+  if(!found.length){document.getElementById('searchResults').innerHTML=`<div class="empty"><div class="empty-text">Sin resultados</div></div>`;return;}
+
+  const html=found.slice(0,20).map((c,ci)=>{
+    const drawerId=`sd-${ci}`;
+    const pills=Object.entries(MARCAS).map(([mk,mv])=>{
+      const md=c.marcas[mk];
+      const diasR=md.ultF?Math.floor((hoy-md.ultF)/86400000):null;
+      if(diasR===null&&md.u===0)return`<div class="marca-pill"><div class="pill-dot" style="background:${mv.color}"></div><span class="pill-label">${mv.label}</span><span class="pill-val" style="color:var(--muted)">—</span></div>`;
+      const col=diasR===null?'#888':diasR<=15?'#4ade80':diasR<=30?'#fb923c':'#f87171';
+      return`<div class="marca-pill"><div class="pill-dot" style="background:${mv.color}"></div><span class="pill-label">${mv.label}</span><span class="pill-val" style="color:${col}">${md.u>0?fmt(md.u)+' cj':'—'}${diasR!==null?' · '+diasR+'d':''}</span></div>`;
+    }).join('');
+
+    const drawerContent=Object.entries(MARCAS).map(([mk,mv])=>{
+      const md=c.marcas[mk];
+      const totalMarca=Object.values(md.arts).reduce((s,a)=>s+a.c,0);
+      if(!totalMarca)return'';
+      const{skus,labels}=getSkus(mv.key);
+      const chips=skus.map((s,i)=>`<span class="infalt-chip ${md.infalt.has(s)?'chip-ok':'chip-miss'}">${labels[i]}</span>`).join('');
+      const arts=Object.values(md.arts).sort((a,b)=>b.c-a.c).slice(0,4).map(p=>`<div class="sku-row"><span class="sku-row-name">${escHtml(p.d)}</span><span class="sku-row-cant">${fmt(p.c)} cj</span></div>`).join('');
+      return`<div class="drawer-section"><div class="drawer-title" style="color:${mv.color}">${mv.label} · ${fmt(totalMarca)} cj período</div><div class="infalt-grid">${chips}</div><div class="sku-rows">${arts}</div></div>`;
+    }).join('');
+
+    const otrasContent=(()=>{
+      const rows=Object.entries(c.otras).sort((a,b)=>b[1].u-a[1].u).slice(0,3).map(([nom,dat])=>{
+        const arts=Object.values(dat.arts||{}).sort((a,b)=>b.c-a.c).slice(0,2).map(p=>`<div class="sku-row"><span class="sku-row-name">${escHtml(p.d)}</span><span class="sku-row-cant">${fmt(p.c)} cj</span></div>`).join('');
+        return`<div style="margin-bottom:6px"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;margin-bottom:3px">${escHtml(nom)}</div>${arts}</div>`;
+      }).join('');
+      return rows?`<div class="drawer-section"><div class="drawer-title">Otras marcas</div>${rows}</div>`:'';
+    })();
+
+    return`<div class="search-client-card">
+      <div class="search-client-header" onclick="document.getElementById('${drawerId}').classList.toggle('open')">
+        <div class="search-client-name">${escHtml(c.nombre)}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${escHtml(c.localidad)}</div>
+        <div class="marca-pills">${pills}</div>
+      </div>
+      <div class="search-drawer" id="${drawerId}">${drawerContent}${otrasContent}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('searchResults').innerHTML=html;
+}
+
+// ── UTILS ──
+function fmt(n){return Math.round(n).toLocaleString('es-AR')}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function firstName(n){const p=n.trim().split(' ');return p.length>1?p[0]+' '+p[1]:p[0]}
+function formatDate(d){return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()}
+function monthName(m){return['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m]}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+</script>
+</body>
+</html>
